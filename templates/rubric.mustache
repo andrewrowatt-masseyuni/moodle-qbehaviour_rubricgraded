@@ -1,0 +1,138 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template qbehaviour_rubricgraded/rubric
+
+    A rubric, shown before grading (preview), as a grading form (grade) or after grading (review).
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * data-region="qbehaviour_rubricgraded-rubric", data-mode, data-criterion, data-level, data-score
+    * In grade mode: data-lockzeropoints, data-minscore, data-maxscore, data-maxmark, data-markdp,
+      data-maxmarkformatted, data-decsep, and the data-region="score" and data-region="mark" elements.
+
+    Context variables required for this template:
+    * uniqid - Unique id prefix.
+    * mode - preview, grade or review.
+    * isgrade, ispreview, isreview - Which mode this is.
+    * showscores - Whether to show the points for each level.
+    * criteria - The criteria, each with position, descriptionid, description, levels and remark fields.
+
+    Example context (json):
+    {
+        "uniqid": "rubric1",
+        "mode": "review",
+        "isgrade": false,
+        "ispreview": false,
+        "isreview": true,
+        "showscores": true,
+        "criteria": [
+            {
+                "position": 1,
+                "descriptionid": "rubric1_c1",
+                "description": "Argument",
+                "levels": [
+                    {"position": 1, "definition": "Unclear", "score": 0, "scoreformatted": "0", "selected": false},
+                    {"position": 2, "definition": "Clear", "score": 2, "scoreformatted": "2", "selected": true}
+                ],
+                "remarkvisible": true,
+                "remarkformatted": "Well structured."
+            }
+        ]
+    }
+}}
+<div class="qbehaviour_rubricgraded-rubric mode-{{mode}}" id="{{uniqid}}" data-region="qbehaviour_rubricgraded-rubric"
+        data-mode="{{mode}}"{{#isgrade}} data-lockzeropoints="{{lockzeropoints}}" data-minscore="{{minscore}}"
+        data-maxscore="{{maxscore}}" data-maxmark="{{maxmark}}" data-markdp="{{markdp}}"
+        data-maxmarkformatted="{{maxmarkformatted}}" data-decsep="{{decsep}}"{{/isgrade}}>
+    <div class="rubric-heading" id="{{uniqid}}_heading">
+        {{#ispreview}}{{#str}}rubricpreview, qbehaviour_rubricgraded{{/str}}{{/ispreview}}
+        {{^ispreview}}{{#str}}rubric, qbehaviour_rubricgraded{{/str}}{{/ispreview}}
+    </div>
+    <div class="criteria" role="list" aria-labelledby="{{uniqid}}_heading">
+        {{#criteria}}
+        <div class="criterion" role="listitem" data-criterion="{{position}}">
+            <div class="criterion-description" id="{{descriptionid}}">{{{description}}}</div>
+            {{#isgrade}}
+            <div class="levels" role="radiogroup" aria-labelledby="{{descriptionid}}">
+                {{#levels}}
+                <label class="level{{#selected}} selected{{/selected}}" for="{{inputid}}" data-level="{{position}}">
+                    <input type="radio" class="form-check-input" name="{{inputname}}" id="{{inputid}}"
+                            value="{{position}}" data-score="{{score}}"{{#selected}} checked="checked"{{/selected}}>
+                    <span class="definition">{{{definition}}}</span>
+                    {{#showscores}}
+                    <span class="score">{{#str}}pointsx, qbehaviour_rubricgraded, {{scoreformatted}}{{/str}}</span>
+                    {{/showscores}}
+                </label>
+                {{/levels}}
+            </div>
+            {{/isgrade}}
+            {{^isgrade}}
+            <div class="levels" role="list" aria-labelledby="{{descriptionid}}">
+                {{#levels}}
+                <div class="level{{#selected}} selected{{/selected}}" role="listitem" data-level="{{position}}">
+                    <span class="definition">{{{definition}}}</span>
+                    {{#showscores}}
+                    <span class="score">{{#str}}pointsx, qbehaviour_rubricgraded, {{scoreformatted}}{{/str}}</span>
+                    {{/showscores}}
+                    {{#selected}}
+                    <span class="selected-marker">{{#str}}selectedlevel, qbehaviour_rubricgraded{{/str}}</span>
+                    {{/selected}}
+                </div>
+                {{/levels}}
+            </div>
+            {{/isgrade}}
+            {{#remarkeditable}}
+            <div class="remark">
+                <label for="{{remarkinputid}}">{{#str}}remarkfor, qbehaviour_rubricgraded, {{position}}{{/str}}</label>
+                <textarea class="form-control" name="{{remarkinputname}}" id="{{remarkinputid}}" rows="2">{{remark}}</textarea>
+            </div>
+            {{/remarkeditable}}
+            {{#remarkhidden}}
+            <input type="hidden" name="{{remarkinputname}}" value="{{remark}}">
+            {{/remarkhidden}}
+            {{#remarkvisible}}
+            <div class="remark">
+                <span class="remark-label">{{#str}}remark, qbehaviour_rubricgraded{{/str}}</span>
+                <span class="remark-text">{{{remarkformatted}}}</span>
+            </div>
+            {{/remarkvisible}}
+        </div>
+        {{/criteria}}
+    </div>
+    {{#isgrade}}
+    <input type="hidden" name="{{rubricinputname}}" value="1">
+    <div class="rubric-total" aria-live="polite">
+        <span data-region="score">{{#str}}rubricscore, qbehaviour_rubricgraded, { "score": {{#quote}}{{totalscore}}{{/quote}}, "max": {{#quote}}{{maxscoreformatted}}{{/quote}} }{{/str}}</span>
+        {{#hasmark}}
+        <span data-region="mark">
+            {{#complete}}{{#str}}calculatedmark, qbehaviour_rubricgraded, { "mark": {{#quote}}{{markformatted}}{{/quote}}, "max": {{#quote}}{{maxmarkformatted}}{{/quote}} }{{/str}}{{/complete}}
+            {{^complete}}{{#str}}rubricincomplete, qbehaviour_rubricgraded{{/str}}{{/complete}}
+        </span>
+        {{/hasmark}}
+    </div>
+    {{/isgrade}}
+</div>
+{{#isgrade}}
+{{#js}}
+require(['qbehaviour_rubricgraded/grading'], function(grading) {
+    grading.init();
+});
+{{/js}}
+{{/isgrade}}
